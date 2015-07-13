@@ -1,0 +1,13 @@
+function meic_black_popup(src){
+var doc_height=$(document).height();
+var doc_width=$(document).width();
+$('body').append('<div class="black_popup" style="width:100% ; height:'+doc_height+'px ; top:0; left:0 ; position:fixed ; vertical-align: middle; z-index:8000; text-align:center ; background-color:#000000;filter:alpha(opacity=50); -moz-opacity:0.5;opacity: 0.5;" id="black_layer"></div>');
+$('body').append('<div class="black_popup" style="position:fixed;top:0px;left:0px;right:0px;z-index:9000;height:100%;overflow:auto;padding:25px 10px 10px 10px;text-align: center;"><img class="black_popup_close" src="/apps/meic/engine/img/btn_close.png" style="margin-left:-30px;margin-top:6px;z-index:10000" align="top" onclick="$(\'.black_popup\').remove();"/></div>');
+
+$("<img/>").attr("src", src)
+    .load(function() {
+    	if (doc_width<=this.width){
+    	 $(this).attr('width',(doc_width-40));
+    	}
+    }).insertBefore('.black_popup_close');
+}

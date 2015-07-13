@@ -1,0 +1,16 @@
+*{padding:0;margin:0;behavior: url(ie_css3.htc)\9;background-repeat: no-repeat;}
+.center{margin:0 auto;text-align:center;}
+.hide{display:none;}
+.border{border:1px solid red;}
+.btn_ctl{
+	width:53px;
+	height:80px;
+}
+.btn_ctl:hover{cursor:pointer;}
+.pause{background-image:url(ICON_ZT.png);}
+.play{background-image:url(ICON_BF.png);}
+.ready{background-image:url(ICON_ANI.png);}
+.stop{background-image:url(ICON_STOP.png); display:none; cursor:pointer;}
+.end{background-image:url(ICON_FH.png);}
+.btn_reset{background-image:url(ICON_CS.png);}
+.btn_rotate{background-image:url(ICON_XH.png);}

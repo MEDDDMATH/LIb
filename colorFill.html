@@ -1,0 +1,365 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>DEMO</title>
+	<style>
+		body, html{
+			padding:0;
+			margin:0;
+		}
+		table{
+			border:1px solid #eee;
+			padding:0;
+			border-collapse: collapse;
+		}
+		table td{
+			width:9px;
+			height:9px;
+			border:2px solid #494949;
+			background-color:#4c4c4c;
+		}
+	</style>
+	 <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+</head>
+<body>
+<script>
+var tableArr = [];
+var templeteArr = [];
+var clickX = 0;
+var clickY = 0;
+var row = 60;
+var column = 100;
+var lastClick = [];
+lastClick['x']=-1;
+lastClick['y']=-1;
+
+function TObject()
+{
+	this.x = 0;
+	this.deleted = false;
+
+	this.SetDeleted = function(deleted)
+	{
+		this.deleted = deleted;
+	}
+
+}
+
+
+function connectedPoint(pointX1, pointY1, pointX2, pointY2){
+	var deltax = pointX1 - pointX2;
+	var deltay = pointY1 - pointY2;
+	
+	var deltaerr = Math.abs(deltay / deltax)    // Assume deltax != 0 (line is not vertical),
+	
+	var returnArr = [];
+	if((deltax==0)&&(deltay!=0)){
+		if(pointY1<=pointY2){
+			for(yy=pointY1;yy<pointY2;yy++){
+				var t = new Array();
+				t["x"]=pointX1;
+				t["y"]=yy;
+				returnArr.push(t);
+			}
+		}else{
+			for(yy=pointY1;yy>pointY2;yy--){
+				var t = new Array();
+				t["x"]=pointX1;
+				t["y"]=yy;
+				returnArr.push(t);
+			}
+		}
+	}else if(deltax!=0){
+		var error = 0;
+		var pointY = pointY1;
+		if(pointX1<=pointX2){
+			for(xx=pointX1;xx<pointX2;xx++){
+				
+				error = error + deltaerr;
+				
+				if(error < 0.5){
+					var t = new Array();
+					t["x"]=xx;
+					t["y"]=pointY;
+					returnArr.push(t);
+				}
+				
+				while (error >= 0.5){
+					var t = new Array();
+					t["x"]=xx;
+					t["y"]=pointY;
+					returnArr.push(t);
+
+					pointY = pointY + Math.sign(pointY2-pointY1);
+					error = error - 1.0;
+				}
+			}
+		}else{
+			for(xx=pointX1;xx>pointX2;xx--){
+				error = error - deltaerr;
+				
+				if(error > -0.5){
+					var t = new Array();
+					t["x"]=xx;
+					t["y"]=pointY;
+					returnArr.push(t);
+				}
+				
+				
+				while (error <= -0.5){
+					var t = new Array();
+					t["x"]=xx;
+					t["y"]=pointY;
+					returnArr.push(t);
+					//console.log(pointY);
+					//console.log(Math.sign(pointY2-pointY1));
+					pointY = pointY + Math.sign(pointY2-pointY1);
+					error = error + 1.0;
+				}
+				
+			}
+		}
+	}
+	return returnArr;
+}
+
+
+
+function countSize(obj) { 
+	var size = 0, key; 
+	for (key in obj) { 
+		if (obj.hasOwnProperty(key)) size++; 
+	} 
+	return size; 
+};
+
+
+
+function drawTable(){
+	/*
+	var objArray = new Array();
+	var anObject = new TObject();
+	anObject.SetDeleted(false);
+	
+	objArray.push(anObject);
+	var a = objArray.pop();
+	console.log("Deleted????" + a.deleted);
+	*/
+
+
+	for(a = 0; a < row; a++) {
+		writeHTML = '<tr>';
+		for(b = 0; b < column; b++) {
+			writeHTML += '<td></td>';
+			if(tableArr[b] == undefined){
+				tableArr[b] = [];
+			}
+			tableArr[b][a] = 0;
+		}
+		writeHTML += '</tr>';
+		$('table.drawing').append(writeHTML);
+	}
+	templeteArr = tableArr;
+	//console.log(templeteArr[0][0]);
+}
+
+function findFirst(arr){
+	for(key in arr){
+		return arr[key];
+	}
+}
+
+function cloneArray(){
+	return templeteArr;
+}
+
+function labeling(){
+	////console.log(tableArr);
+	var containerArea = [];
+	var queue = [];
+	var visitedArr = [];
+	for(a = 0; a < row; a++) {
+		for(b = 0; b < column; b++) {
+			if(visitedArr[b] == undefined){
+				visitedArr[b] = [];
+			}
+			visitedArr[b][a] = 0;
+		}
+	}
+	var labelArr = visitedArr;
+	/*
+	visitedArr = templeteArr;
+	labelArr = templeteArr;
+	*/
+	var currentColor = -1;
+	
+	for(iii = 0; iii < column; iii++) {
+		for(jjj = 0; jjj < row; jjj++) {
+			//console.log(templeteArr[0][0]);
+			if((visitedArr[iii][jjj]==0)&&(tableArr[iii][jjj]==0)){
+				currentColor++;
+				containerArea[currentColor] = [];
+				var anObject = new TObject();
+				anObject.SetDeleted(false);
+				containerArea[currentColor].push(anObject);
+				//$('table.drawing tr:eq('+jjj+')').find('td:eq('+iii+')').text(currentColor);
+				var t = new Array();
+				t["x"]=iii;
+				t["y"]=jjj;
+				queue.push(t);
+
+				
+				////console.log(countSize(queue));
+				if((tableArr[iii][jjj]==0)&&(visitedArr[iii][jjj]==0)){
+					containerArea[currentColor].push(t);
+				}
+				visitedArr[iii][jjj]=1;
+				while (queue.length>0) {
+					//console.log(visitedArr[10][10]);
+					//console.log(templeteArr[10][10]);
+					var currentPoint = queue.shift();;
+
+					var i = currentPoint['x'];
+					var j = currentPoint['y'];
+					//$('table.drawing tr:eq('+j+')').find('td:eq('+i+')').text(currentColor);
+					
+					//$('table.drawing tr:eq('+j+')').find('td:eq('+i+')').css('background-color','#'+currentColor*2+currentColor*2+currentColor*2);
+					////console.log(countSize(queue));
+
+					////console.log(countSize(queue));
+					if((i-1>=0)&&(tableArr[i-1][j]==0)&&(visitedArr[i-1][j]==0)){
+						var t = new Array();
+						t["x"]=i-1;
+						t["y"]=j;
+						queue.push(t);
+						containerArea[currentColor].push(t);
+						visitedArr[i-1][j]=1;
+					}
+					if((i+1<column)&&(tableArr[i+1][j]==0)&&(visitedArr[i+1][j]==0)){
+						var t = new Array();
+						t["x"]=i+1;
+						t["y"]=j;
+						queue.push(t);
+						containerArea[currentColor].push(t);
+						visitedArr[i+1][j]=1;
+					}
+					if((j-1>=0)&&(tableArr[i][j-1]==0)&&(visitedArr[i][j-1]==0)){
+						var t = new Array();
+						t["x"]=i;
+						t["y"]=j-1;
+						queue.push(t);
+						containerArea[currentColor].push(t);
+						visitedArr[i][j-1]=1;
+					}
+					if((j+1<row)&&(tableArr[i][j+1]==0)&&(visitedArr[i][j+1]==0)){
+						var t = new Array();
+						t["x"]=i;
+						t["y"]=j+1;
+						queue.push(t);
+						containerArea[currentColor].push(t);
+						visitedArr[i][j+1]=1;
+					}
+					
+				}
+			}
+			//jjj = row+1;
+		}
+		//iii = column+1;
+		
+	}
+	
+	/*for(area in containerArea){
+		
+		for(point=0;point<countSize(containerArea[area]);point++){
+			if($.isArray(containerArea[area][point])){
+				if(
+				(containerArea[area][point]['x'] == 0)
+				||
+				(containerArea[area][point]['x'] == column-1)
+				||
+				(containerArea[area][point]['y'] == 0)
+				||
+				(containerArea[area][point]['y'] == row-1)
+				){
+					//console.log(containerArea[area][point]['x'], containerArea[area][point]['y']);
+					containerArea[area][0].deleted = true;
+					//delete containerArea[area];
+					break;
+				}
+			}
+		}
+	}*/
+	for(area in containerArea){
+		
+		if(!containerArea[area][0].deleted){
+			for(point=0;point<countSize(containerArea[area]);point++){
+				$('table.drawing tr:eq('+containerArea[area][point]['y']+')').find('td:eq('+containerArea[area][point]['x']+')').css('backgroundColor', '#ccff1e');
+				tableArr[containerArea[area][point]['x']][containerArea[area][point]['y']] = 1;
+			}
+		}
+	}
+	
+}
+var down = 0;
+$( document ).ready(function(){
+	var connectedArr = [];
+	drawTable();
+	//console.log(tableArr[0][0]);
+	//mouseenter//click
+	$('html').mousedown(function (){
+		down = 1;
+	}).mouseup(function(){
+		down = 0;
+		lastClick['x']=-1;
+		lastClick['y']=-1;
+	});
+	$('table td').mouseenter(function (){
+	if(down){
+		thisTd = $(this);
+		clickY = thisTd.parents('tr').index();
+		clickX = thisTd.index();
+		////console.log(tableArr);
+		
+		
+		if(tableArr[thisTd.index()][thisTd.parents('tr').index()] == 0){
+			tableArr[thisTd.index()][thisTd.parents('tr').index()] = 1;
+			thisTd.css('backgroundColor', '#ccff1e');
+			
+		}else{
+			//tableArr[thisTd.index()][thisTd.parents('tr').index()] = 0;
+			//thisTd.css('backgroundColor', '#fff');
+		}
+		////console.log(thisTd.parents('tr').index(), thisTd.index());
+
+		
+		if(lastClick['x'] >= 0){
+			connectedArr = connectedPoint(lastClick['x'], lastClick['y'], clickX, clickY);
+			if(connectedArr.length>0){
+				for(pointKey in connectedArr){
+					//console.log(connectedArr[pointKey]);
+					if(tableArr[connectedArr[pointKey]['x']][connectedArr[pointKey]['y']]==0){
+					tableArr[connectedArr[pointKey]['x']][connectedArr[pointKey]['y']] = 1;
+					$('table.drawing tr:eq('+connectedArr[pointKey]['y']+')').find('td:eq('+connectedArr[pointKey]['x']+')').css('backgroundColor', '#ccff1e');
+					}
+				}
+			}
+			
+		}
+		lastClick['x']=clickX;
+		lastClick['y']=clickY;
+		$('table.drawing tr:eq('+clickY+')').find('td:eq('+clickX+')').text('');
+		//console.log(templeteArr[0][0]);
+		labeling();
+	}
+	});
+	
+});
+
+</script>
+<table class="drawing">
+	<tbody>
+
+	</tbody>
+</table>
+</body>
